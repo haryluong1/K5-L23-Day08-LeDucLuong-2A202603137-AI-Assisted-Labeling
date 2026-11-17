@@ -1,13 +1,13 @@
 # Thông tin học viên
 
-- Họ và tên: <<>>
-- MSHV: <<>>
-- Lớp (L2 / L3 / khác): <<>>
-- Tài khoản GitHub: <<>>
-- Repo bài nộp (URL): <<>>
+- Họ và tên: Lê Đức Lương
+- MSHV: 2A202603137
+- Lớp (L2 / L3 / khác): L23
+- Tài khoản GitHub: haryluong1
+- Repo bài nộp (URL): https://github.com/haryluong1/K5-L23-Day08-LeDucLuong-2A202603137-AI-Assisted-Labeling
 - Commit chốt bài (hash): <<>>
-- Máy: <<hệ điều hành, GPU (CUDA / MPS / không có)>>
-- CVAT (Docker): <<phiên bản, ví dụ v2.81.0>>
+- Máy: Windows 11, CPU (không có GPU rời)
+- CVAT (Docker): v2.74.1
 
 ## Kết quả tóm tắt (điền cuối bài; số lấy từ `submission/qc/*`, kèm mẫu số)
 

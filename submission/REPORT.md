@@ -1,4 +1,4 @@
-# Báo cáo Day 08 — <<MSHV - Họ và tên>>
+# Báo cáo Day 08 — 2A202603137 - Lê Đức Lương
 
 > Một file duy nhất cho cả bài (đã gộp recipe, QC và ghi chú cá nhân). Mọi con số kèm **mẫu số** và nguồn (file nào). Viết bằng lời của bạn.
 
@@ -70,8 +70,8 @@ Nếu Rework / Hold, việc cần làm tiếp: <<>>
 ## 8. Ghi chú cá nhân
 
 - **Dùng AI để làm bài** (công cụ nào, việc gì, kiểm tra thế nào; "không dùng" nếu không): <<>>
-- Gold có bị nhiễm không (bạn có nhìn pre-label hay hỏi AI trước khi gán xong)? <<không / có, như sau: ...>>
-- Máy / GPU / CVAT dùng; vướng mắc cài đặt: <<>>
+- Gold có bị nhiễm không (bạn có nhìn pre-label hay hỏi AI trước khi gán xong)? Không — 4 ảnh gold (`img_001.jpg`, `img_012.jpg`, `img_020.jpg`, `img_036.jpg`) được gán tay hoàn toàn độc lập trên CVAT (Task `gold-manual`, 22 đối tượng trong 15 phút, trung bình 3.75 phút/ảnh) trước khi chạy bất kỳ model pre-label nào. Các ca khó / phân vân quy tắc đã gắn cờ `can_review` gồm: `img_012.jpg` (phương tiện ba bánh/tuk-tuk góc nhìn nghiêng dễ nhầm với `car` và người ở rìa trên bị cắt một phần cơ thể), `img_020.jpg` (xe ở nền xa bị che khuất một phần phía sau người đi bộ) và `img_036.jpg` (cụm xe/người ở xa biên ~20 px gom vào `ignore_region`).
+- Máy / GPU / CVAT dùng; vướng mắc cài đặt: Máy Windows 11 chạy CPU (không có GPU rời), CVAT Docker `v2.74.1` kèm Nuclio serverless; ban đầu thiếu gói `requirements-local.txt` (`numpy`) trên Python local và container `nuclio` thiếu newline trong store JSON, đã khắc phục.
 - Dùng cache `data/cache/` thay vì tự chạy? <<không / có, vì ...>>
 - Lỗi / bug script đã gặp (nếu có): <<>>
 - Một điều bạn làm khác lần sau: <<>>

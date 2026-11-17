@@ -1,1 +1,2 @@
 step,images,minutes,note
+gold_manual,4,15,"Gán tay độc lập 4 ảnh gold (img_001, img_012, img_020, img_036) được 22 đối tượng (kèm 2 vùng ignore_region ở img_036) theo guideline v1.0, không dùng AI"
