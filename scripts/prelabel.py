@@ -118,6 +118,12 @@ class YoloeBackend(Backend):
     def __init__(self, *args):
         super().__init__(*args)
         import os
+        import types
+        import packaging.version
+        if "pkg_resources" not in sys.modules:
+            _pr = types.ModuleType("pkg_resources")
+            _pr.packaging = packaging
+            sys.modules["pkg_resources"] = _pr
         from ultralytics import YOLOE
         self.native_masks = self.a.segmenter == "native"
         name = self.a.weights or f"yoloe-26{self.a.size}-seg.pt"

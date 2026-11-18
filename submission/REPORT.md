@@ -6,14 +6,18 @@
 
 | Lớp | Model + cỡ | Ngưỡng | Vì sao (dẫn `run_id` trong `model_log.csv`) |
 |---|---|---|---|
-| person / bicycle / motorbike / car / bus / truck | <<YOLO26m>> | <<theo lớp, từ threshold_sweep>> | <<>> |
-| three_wheeler | <<YOLOE-26s, prompt: ...>> | <<>> | <<>> |
+| person / bicycle / motorbike / bus / truck | `YOLO26s` (`yolo26s.pt`) | `0.30` (mặc định) | Detector đóng 80 lớp COCO bắt nhanh (1.33s/ảnh ở `r05`, `r01`); trên 4 ảnh gold `person` đạt recall tối đa 80% (< 90%, 10 vật) và `bicycle`, `motorbike` (4 vật), `bus`, `truck` có `< 5` vật trong gold nên giữ ngưỡng mặc định `0.30` theo `threshold_sweep.md` |
+| car | `YOLO26s` (`yolo26s.pt`) | `0.45` (theo `threshold_sweep`) | Từ `r01`, `r02`, `r05` và `qc/threshold_sweep.md`: ở ngưỡng `0.45`, lớp `car` đạt recall `100%` (`>= 90%`, 6/6 vật gold) và tăng precision lên `55%` (loại bỏ bớt box thừa conf thấp) |
+| three_wheeler | `YOLOE-26s-seg` (`yoloe-26s-seg.pt`, prompt: `tuk-tuk`, `cyclo`, `cargo tricycle`) | `0.30` (mặc định) | `YOLO26s` (`r01`, `r02`) không có lớp `three_wheeler` trong COCO nên bỏ sót hoặc gán nhầm thành `car`/`truck`; `YOLOE-26s` (`r04`, `r06`) bắt đúng tuk-tuk/xích lô/ba gác qua prompt chữ (trong 4 ảnh gold có `< 5` vật nên giữ ngưỡng mặc định `0.30`) |
 
-- Lệnh `merge_prelabels.py` đã dùng (dán nguyên): <<>>
-- **Phiên bản SAM bạn chọn** (SAM 1 / 2.1 / 3) và lý do: <<chất lượng mask, tốc độ, RAM, quyền truy cập>>
-- Lỗi nào **không sửa được bằng đổi ngưỡng** (ví dụ tuk-tuk bị gọi `car`)? Sửa thế nào? <<>>
-- Box **điểm cao mà sai** hoặc **điểm thấp mà đúng** (ảnh nào): <<>>
-- Giới hạn: chọn ngưỡng trên chính gold (4 ảnh) nên số đo máy trên gold là lạc quan: <<>>
+- Lệnh `merge_prelabels.py` đã dùng (dán nguyên):
+  `python scripts/merge_prelabels.py work/prelabel/yoloe_all/pre.coco.json work/prelabel/y26_all/pre.coco.json --thr "car=0.45" --conf 0.3 --iou 0.6 --split "batch,gold" --out work/prelabel/merged_review/pre.coco.json`
+- **Phiên bản SAM bạn chọn** (SAM 1 / 2.1 / 3) và lý do: Chọn **SAM 2.1 Tiny (`sam2.1_t.pt`)** làm model chính (và đối chiếu thêm với **SAM 1 MobileSAM `mobile_sam.pt`** ở Part 5) vì máy chạy CPU (Windows 11, không có GPU rời), `sam2.1_t.pt` (~78 MB) và `mobile_sam.pt` (~40 MB) tốn ít RAM, chạy ổn định song song với Docker CVAT, không cần quyền truy cập gated như SAM 3 nhưng vẫn cho polygon mask bám sát biên vật thể (`r03`: 10/10 mask trên `img_004.jpg` và `img_013.jpg`).
+- Lỗi nào **không sửa được bằng đổi ngưỡng** (ví dụ tuk-tuk bị gọi `car`)? Sửa thế nào? Lỗi **lệch hệ quy chiếu nhãn (taxonomy mismatch / closed-set blindness)**: `YOLO26s` chỉ biết 80 lớp COCO nên gọi chiếc tuk-tuk/xe ba gác (trên `img_002.jpg`, `img_011.jpg`, `img_013.jpg`, `img_032.jpg`) là `car` hoặc `truck` với điểm tự tin cao, và khi nối vào SAM (`r03`) thì mask của SAM cũng mang nhãn sai `car` theo box đầu vào. Nâng hay hạ `--conf` chỉ làm mất box hoặc thêm box rác chứ không đổi được tên lớp sang `three_wheeler`. Cách sửa: dùng model open-vocabulary **`YOLOE-26s`** với prompt `"tuk-tuk, cyclo, cargo tricycle" -> three_wheeler` và đặt file `yoloe_all` **đứng trước** `y26_all` trong `merge_prelabels.py` (`--iou 0.6`) để nhãn `three_wheeler` ghi đè box `car`/`truck` trùng vị trí, kết hợp kiểm tra bằng mắt ở bước 3 của checklist review.
+- Box **điểm cao mà sai** hoặc **điểm thấp mà đúng** (ảnh nào):
+  - **Điểm cao mà sai:** Trên `img_002.jpg` và `img_013.jpg`, `YOLO26s` dự đoán chiếc tuk-tuk là `car` với confidence `0.42–0.75`; trên `img_002.jpg`, `YOLOE-26s` cũng sinh box phụ `three_wheeler` (`conf ~ 0.37`) đè lên xe bán tải ở nền.
+  - **Điểm thấp mà đúng:** Trên `img_011.jpg` và `img_016.jpg`, nhiều người đi bộ (`person`) và xe máy (`motorbike`) ở xa hoặc bị che khuất một phần có confidence chỉ `0.25–0.40` (bị mất hoàn toàn khi nâng ngưỡng lên `0.50` ở `r02`, làm mất 32 box `person` và 19 box `motorbike`).
+- Giới hạn: chọn ngưỡng trên chính gold (4 ảnh) nên số đo máy trên gold là lạc quan: Tập gold chỉ có **4 ảnh (20 đối tượng tính điểm + 2 `ignore_region`)**, nhiều lớp có dưới 5 mẫu (`motorbike` chỉ 4 vật, `bicycle`/`bus`/`truck`/`three_wheeler` không đủ `>= 5` mẫu để chọn ngưỡng riêng). Hơn nữa, việc vừa dùng 4 ảnh gold để tìm ngưỡng tối ưu trong `threshold_sweep.py` vừa dùng chính 4 ảnh đó để tính Precision/Recall của máy ở Part 4 là đánh giá **in-sample (chọn và chấm trên cùng dữ liệu)**, nên các chỉ số Precision/Recall trên gold (`car` recall 100%) mang tính lạc quan hơn hiệu năng thực tế trên 24 ảnh batch.
 
 ## 2. AI error profile (từ `qc/review_stats.md`)
 
