@@ -1,0 +1,6 @@
+image,object_id,error_type,reviewer,note
+img_003.jpg,6,thua,LeDucLuong,"Box #6 person nhỏ chồng đè lên phần nón/đầu của người lái xe ba gác #9 person (box trùng trên cùng một người)"
+img_006.jpg,31,sai_vi_tri_kich_thuoc,LeDucLuong,"Box #31 motorbike bao gộp cả cụm 3 xe máy đỗ sát nhau thay vì tách từng xe hoặc dùng ignore_region; sót 1 person mặc áo xám đứng quay lưng cạnh #34"
+img_014.jpg,,khong,LeDucLuong,"14/14 đối tượng tiền cảnh và trung cảnh (#65 đến #78) đúng lớp và ôm sát vật thể"
+img_031.jpg,268,sai_vi_tri_kich_thuoc,LeDucLuong,"Box #268 person chỉ bao phần thân trên tới rổ trái cây, thiếu phần chân người bán hàng nhìn thấy rõ phía dưới khung xe đạp #266"
+img_035.jpg,,bo_sot,LeDucLuong,"Các box #294-#309 (kể cả xích lô #305 three_wheeler) đúng lớp, nhưng bỏ sót 1 xe máy + người ở sát mép phải ảnh"

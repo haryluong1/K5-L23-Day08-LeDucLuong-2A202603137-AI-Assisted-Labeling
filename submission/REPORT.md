@@ -71,33 +71,58 @@
 
 | Ảnh | SAM (phiên bản) | Số click | Mask gồm người lái / hàng hoá? | Lỗi quan sát | File trong `masks/` |
 |---|---|---|---|---|---|
-| <<img_0xx>> | <<>> | <<>> | <<>> | <<>> | <<>> |
+| `img_013.jpg` | `SAM 2.1 Tiny` (`sam2.1_t.pt`) | 3 click (`2 pos`: `400,480`, `600,110`; `1 neg`: `720,300`) | Còn dính một phần đầu/chân người lái và khách ngồi sau (diện tích `275,125 px = 39.4%` ảnh, `1 polygon`) | 1 click âm (`720,300`) mới khoét lõm phần lưng áo người lái chứ chưa tách đứt hoàn toàn người lái khỏi vòm mái tuk-tuk; mask hơi tràn nhẹ xuống bóng đổ bánh trước | `tuktuk_img013_sam2.jpg` |
+| `img_013.jpg` | `SAM 1 MobileSAM` (`mobile_sam.pt`) | 3 click (`2 pos`: `400,480`, `600,110`; `1 neg`: `720,300`) | Khoét vùng người lái mạnh hơn (`245,541 px = 35.2%` ảnh) nhưng tách thành `2 polygon` rời nhau | Biên mask ở khung sắt mái vòm và chắn bùn răng cưa hơn `sam2.1_t.pt`, tách mảnh phụ ở phần mui trên | `tuktuk_img013_sam1.jpg` |
+| `img_004.jpg` | `SAM 2.1 Tiny` (`sam2.1_t.pt`) | 3 click (`2 pos`: `620,480`, `700,560`; `1 neg`: `465,450`) | Không gồm người xung quanh, nhưng bao gồm cả thùng/khung chở hàng gắn liền xe ba bánh (`86,899 px = 12.4%` ảnh, `1 polygon`) | Điểm âm `465,450` chặn tốt không cho mask lan sang xe/người bên trái, nhưng phần gầm bánh xe tối màu bị hụt nhẹ | `tuktuk_img004_sam2.jpg` |
+| `img_017.jpg` | `SAM 2.1 Tiny` (`sam2.1_t.pt`) | 3 click (`2 pos`: `560,420`, `680,500`; `1 neg`: `645,355`) | Khoét tách được phần thân trên người lái nhờ điểm âm `645,355` (`84,062 px = 12.0%` ảnh, `1 polygon`) | Phần chân dưới của người lái nằm sát khung sườn xe có độ tương phản thấp nên vẫn dính một phần nhỏ vào mask thân xe | `tuktuk_img017_sam2.jpg` |
 
-- Đối chiếu guideline mục 4.2: quy tắc nào giúp, quy tắc nào thiếu? <<>>
-- *(Tuỳ chọn)* Interactor SAM trong CVAT: làm được / không (lỗi gì, đã thử gì); khác gì offline: <<>>
+- **Đối chiếu guideline mục 4.2: quy tắc nào giúp, quy tắc nào thiếu?**
+  - **Quy tắc giúp ích:** Mục 4.2.1 (độ lệch biên `<= 3 px`, không cần tách chi tiết nan hoa nhỏ hơn bánh xe/tay lái), Mục 4.2.2 (không khoét lỗ thủng `< 5%` diện tích vật) và Mục 4.2.3 (bóng đổ không thuộc vật) giúp xác định rõ vùng mục tiêu khi đặt click dương lên thân và mái xe.
+  - **Quy tắc còn thiếu ở v1.0 (đã bổ sung vào v1.1):** Mục 4.2 v1.0 chưa hướng dẫn rõ cách xử lý khi **người lái ngồi lọt bên trong khung mui hở của `three_wheeler`** (`img_013.jpg`, `img_017.jpg`) — nếu chỉ click dương lên đầu xe và mui xe thì SAM luôn gộp cả người lái vào mask xe. Cần quy định rõ phải kết hợp khung giới hạn (`--box`) hoặc đặt tối thiểu `2–3` điểm click âm (`--neg`) dọc theo đầu, lưng và chân người lái để tách rời polygon `person` và `three_wheeler`.
+- *(Tuỳ chọn)* **Interactor SAM trong CVAT:** Đã triển khai và chạy thử cả **SAM 2.1 Tiny (`pth-ultralytics-sam2-1-t`)** lẫn **Segment Anything MobileSAM (`pth-facebookresearch-sam-vit-h`)** trực tiếp trong mục **AI Tools → Interactors** của CVAT Docker. Khác biệt so với chạy script offline `sam2_points.py`: trên giao diện CVAT có thể nhìn phản hồi mask tức thì sau từng cú click trái/phải để chêm thêm điểm âm ngay tại chỗ bị tràn, nhưng CVAT tự động chuyển mask thành đa giác nhiều đỉnh nên cần bấm giữ `Shift` hoặc chỉnh lại đỉnh nếu viền bị gãy khúc.
 
 ## 6. Calibration (Part 6)
 
-- Số quyết định: <<>> (`calibration_decisions.csv`); quan trọng nhất (dẫn `CAL-xx`): <<>>
-- Quy tắc mới đã vào `guideline_v1.1_calibrated.md`: <<>>
-- Nguyên nhân gốc: <<guideline mơ hồ / chưa nắm quy tắc / máy>>
+- Số quyết định: **`5` quyết định** trong `submission/qc/calibration_decisions.csv` (`CAL-01` đến `CAL-05`, đầy đủ 4 nhóm nguồn: `cau_hoi_mo`, `loi_may`, `can_review`, `bay_lot`).
+- **Quyết định quan trọng nhất:** **`CAL-03` (`nguon = loi_may` trên `img_013.jpg`, `img_003.jpg`, `img_017.jpg`)** và **`CAL-05` (`nguon = bay_lot` trên `img_029.jpg`, `img_004.jpg`, `img_005.jpg`)**:
+  - `CAL-03`: Xử lý lỗi đặc trưng của mô hình open-vocabulary `YOLOE-26s` khi dùng nhiều prompt (`tuk-tuk`, `cyclo`, `cargo tricycle`) sinh ra nhiều box `three_wheeler` chồng đè lên cùng một chiếc xe hoặc gộp cả hàng hóa nhô quá `20%`.
+  - `CAL-05`: Đưa quy trình ẩn nhãn máy 10 giây đầu và lọc cô lập theo lớp (`Filters` cho `bicycle`, `three_wheeler`, `truck`) vào quy chuẩn bắt buộc để chặn lỗi bỏ sót vật ở rìa ảnh và lỗi sai nhãn giữa đám đông.
+- **Quy tắc mới đã vào `guideline_v1.1_calibrated.md`:**
+  1. Chốt toàn bộ 7 câu hỏi mở của mục 6 v1.0: phân biệt `bicycle` vs `motorbike` (xe điện) theo cấu tạo bàn đạp (`CAL-01`); chỉ gom `ignore_region` khi cụm `>= 5` xe có chiều cao `< 20 px` hoặc bị che khuất chồng lấn `> 70%` (`CAL-01`); thay ngưỡng diện tích `20%` cảm tính bằng tiêu chí nhìn thấy trọn cụm **đầu + vai** (`>= 20 px`) cho người ngồi trong xe có mui (`CAL-02`); kính chắn gió thuộc mask xe nhưng phải đặt click âm tách cơ thể người lái (`CAL-02`).
+  2. Mỗi xe ba bánh chỉ giữ duy nhất 1 box `three_wheeler` ôm khung cứng, xoá mọi box trùng lặp do đa prompt của YOLOE (`CAL-03`).
+  3. Vật bị cắt ở mép ảnh hoặc bị che vẫn gán nếu phần nhìn thấy cao `>= 20 px` (`img_012.jpg`, `img_020.jpg`), nhưng tuyệt đối xoá hoặc đưa vào `ignore_region` các box đơn lẻ cao `< 20 px` (`img_017.jpg` box `#80` cao `10.6 px`) (`CAL-04`).
+- **Nguyên nhân gốc:** Kết hợp cả 3 yếu tố:
+  1. **Guideline v1.0 cố ý để mở** (`CAL-01`, `CAL-02`: chưa định nghĩa xe điện, ranh giới `ignore_region` ở trung cảnh và cách đo `20%` diện tích bị che).
+  2. **Đặc tính lỗi hệ thống của mô hình AI** (`CAL-03`: `YOLO26s` mù lớp `three_wheeler`, `YOLOE-26s` sinh box trùng từ đa prompt, `YOLO26s` bắt nhiều box `< 20 px` ở hậu cảnh).
+  3. **Thiên kiến tự động hóa của người duyệt** (`CAL-05`: bị cuốn vào sửa các box máy vẽ sẵn ở giữa ảnh mà quên quét biên ảnh và không lọc kiểm tra riêng từng lớp trong cảnh đông đúc).
 
 ## 7. QC và quyết định (Part 6)
 
-- Mẫu: <<n>> ảnh (<<m>> ảnh `can_review` + <<k>> ngẫu nhiên, seed 42); người kiểm: bạn (**hạn chế**: bạn vừa là người duyệt).
-- Lỗi theo **đối tượng**: <<.../... = ...%>> · theo **ảnh**: <<.../... = ...%>> (ngưỡng Release ≤ 2%)
-- Top lỗi (trong: bỏ sót, thừa, sai lớp, sai vị trí/kích thước, sai thuộc tính, sai mask) + một ảnh ví dụ mỗi loại: <<>>
-- **Giới hạn mẫu nhỏ** (cận trên 95% trong `qc_report_auto.md`): <<>>
-- Script kiểm được / không kiểm được (ví dụ ôm sát, cùng bỏ sót với máy, theo checklist thật): <<>>
+- Mẫu: **`5` ảnh** (`0` ảnh `can_review` trong batch + `5` ảnh ngẫu nhiên với `seed = 42`: `img_003.jpg`, `img_006.jpg`, `img_014.jpg`, `img_031.jpg`, `img_035.jpg`), tổng cộng **`55` đối tượng** (trên tổng lô `24` ảnh batch, `309` đối tượng); người kiểm: `LeDucLuong` (**hạn chế**: người kiểm QC trùng với người duyệt ở Part 4 nên dễ lặp lại cùng điểm mù chủ quan).
+- Lỗi theo **đối tượng**: **`4 / 55 = 7.3%`** (mẫu số: `55` đối tượng trong 5 ảnh mẫu QC) · Lỗi theo **ảnh**: **`4 / 5 = 80.0%`** (mẫu số: `5` ảnh mẫu QC; ngưỡng Release quy định trong `taxonomy.json` là `error_rate_img_max <= 2%`).
+- **Top lỗi** (từ `submission/qc/qc_review.csv` và `qc_report_auto.md`) + ảnh ví dụ:
+  1. `sai_vi_tri_kich_thuoc` (**`2` lỗi**): Trên **`img_006.jpg`**, box `#31 motorbike` bao gộp cả cụm 3 chiếc xe máy đỗ sát nhau thay vì tách từng xe; trên **`img_031.jpg`**, box `#268 person` chỉ bao phần thân trên người bán hàng rong tới rổ trái cây, thiếu phần chân nhìn thấy rõ bên dưới khung xe đạp `#266`.
+  2. `thua` (**`1` lỗi**): Trên **`img_003.jpg`**, còn sót box nhỏ `#6 person` chồng đè lên phần nón/đầu của người lái xe ba gác `#9 person` (2 box `person` trùng trên cùng 1 người).
+  3. `bo_sot` (**`1` lỗi**): Trên **`img_035.jpg`**, bỏ sót 1 xe máy + người lái đang đi vào ở sát mép phải ảnh (ngoài ra trên `img_006.jpg` cũng có 1 người mặc áo xám đứng quay lưng cạnh `#34` bị sót).
+- **Giới hạn mẫu nhỏ** (cận trên 95% trong `qc_report_auto.md`): Với `4/5` ảnh có lỗi (`80.0%`), cận trên khoảng tin cậy 95% (Wilson) của tỉ lệ ảnh lỗi thực tế lên tới **`96%`**. Quan trọng hơn, với cỡ mẫu chỉ `n = 5` ảnh, ngay cả khi quan sát thấy `0/5` lỗi (`0%`) thì cận trên Wilson 95% vẫn là `~43%` (lớn hơn rất nhiều so với ngưỡng `2%`). Do đó, mẫu QC nhỏ `5` ảnh chỉ có tác dụng **phát hiện nhanh lỗi lớn để chặn lô lỗi (reject/rework)** chứ về mặt thống kê **không thể chứng minh** lô đạt chuẩn `< 2%`.
+- **Script kiểm được / không kiểm được:**
+  - *Kiểm tự động được:* Cấu trúc JSON COCO, tên lớp hợp lệ theo `taxonomy.json`, số lượng ảnh, chiều cao box `< 20 px` (`validate_labels.py` đã phát hiện đúng box `#80 person` cao `10.6 px < 20 px` trên `img_017.jpg`), tỉ lệ bắt 12 bẫy đã biết (`review_stats.py`).
+  - *Script KHÔNG tự kiểm được:* Box có ôm sát đủ 4 cạnh vật thể hay bị cắt cụt chân như `#268 person` trên `img_031.jpg`; vật thật bị cả máy lẫn người cùng bỏ sót (như người áo xám trên `img_006.jpg` hay xe ở mép phải `img_035.jpg`); box gộp nhiều xe làm một (`#31 motorbike` trên `img_006.jpg`); và người duyệt có thực sự ẩn nhãn quét ảnh theo checklist hay không.
 
-**Quyết định: <<Release / Hold / Rework>>**, ngày <<YYYY-MM-DD>>. Lý do (đi theo Hold → Rework → Release): <<>>
-Nếu Rework / Hold, việc cần làm tiếp: <<>>
+**Quyết định: `Rework`**, ngày `2026-11-20`.
+- **Lý do (đi theo đúng cây quyết định `Hold → Rework → Release`):**
+  1. *Kiểm mức `Hold`:* Bộ dữ liệu 24 ảnh không bị hỏng và các điểm mơ hồ của guideline v1.0 đã được chốt đầy đủ thành quy tắc rõ ràng trong `guideline_v1.1_calibrated.md` (`guideline_gap = 0`, `data_problem = 0`) → **Không Hold**.
+  2. *Kiểm mức `Rework`:* Tỉ lệ ảnh có lỗi trong mẫu QC là **`4/5 = 80.0% > 2%`** (lỗi theo đối tượng `4/55 = 7.3%`), đồng thời tỉ lệ bắt bẫy ở Part 4 là **`9/12 = 75.0% < 80%`** (lọt 2 bẫy `missing` trên `img_004.jpg`, `img_005.jpg` và 1 bẫy `wrong_class` trên `img_029.jpg`), cộng với 1 cảnh báo kích thước `< 20 px` trên `img_017.jpg` (box `#80`). Các chỉ số này vi phạm ngưỡng Release nên bắt buộc chọn **`Rework`**.
+- **Nếu Rework / Hold, việc cần làm tiếp:**
+  1. Mở lại Task `batch-review` trên CVAT, sửa ngay 4 ảnh lỗi phát hiện qua QC (`img_003.jpg` xoá box trùng `#6`; `img_006.jpg` tách box `#31` và vẽ bù người áo xám; `img_031.jpg` kéo đáy box `#268` xuống hết chân; `img_035.jpg` vẽ bù xe máy ở mép phải).
+  2. Sửa 3 ảnh bị lọt bẫy (`img_004.jpg` thêm `person` ở rìa trái; `img_005.jpg` thêm `motorbike` bị thiếu; `img_029.jpg` đổi box `#395` từ `bicycle` về `person`) và xoá box `#80` cao `10.6 px < 20 px` trên `img_017.jpg`.
+  3. Áp dụng quy tắc lọc `Filters` theo lớp và ẩn nhãn 10 giây đầu trên toàn bộ các ảnh đông xe còn lại, xuất thành `submission/labels/qc_fixed.json`, chạy lại `build_release.py` và rút mẫu QC vòng 2 với seed mới.
 
 ## 8. Ghi chú cá nhân
 
-- **Dùng AI để làm bài** (công cụ nào, việc gì, kiểm tra thế nào; "không dùng" nếu không): <<>>
-- Gold có bị nhiễm không (bạn có nhìn pre-label hay hỏi AI trước khi gán xong)? Không — 4 ảnh gold (`img_001.jpg`, `img_012.jpg`, `img_020.jpg`, `img_036.jpg`) được gán tay hoàn toàn độc lập trên CVAT (Task `gold-manual`, 22 đối tượng trong 15 phút, trung bình 3.75 phút/ảnh) trước khi chạy bất kỳ model pre-label nào. Các ca khó / phân vân quy tắc đã gắn cờ `can_review` gồm: `img_012.jpg` (phương tiện ba bánh/tuk-tuk góc nhìn nghiêng dễ nhầm với `car` và người ở rìa trên bị cắt một phần cơ thể), `img_020.jpg` (xe ở nền xa bị che khuất một phần phía sau người đi bộ) và `img_036.jpg` (cụm xe/người ở xa biên ~20 px gom vào `ignore_region`).
-- Máy / GPU / CVAT dùng; vướng mắc cài đặt: Máy Windows 11 chạy CPU (không có GPU rời), CVAT Docker `v2.74.1` kèm Nuclio serverless; ban đầu thiếu gói `requirements-local.txt` (`numpy`) trên Python local và container `nuclio` thiếu newline trong store JSON, đã khắc phục.
-- Dùng cache `data/cache/` thay vì tự chạy? <<không / có, vì ...>>
-- Lỗi / bug script đã gặp (nếu có): <<>>
-- Một điều bạn làm khác lần sau: <<>>
+- **Dùng AI để làm bài** (công cụ nào, việc gì, kiểm tra thế nào; "không dùng" nếu không): Dùng trợ lý AI (Antigravity) để hỗ trợ kiểm tra lỗi cài đặt môi trường Python 3.14 (`requirements-local.txt`, `ultralytics`, xử lý tương thích `pkg_resources` cho `openai-clip`), cấu hình container Nuclio cho CVAT Docker và đối chiếu cấu trúc báo cáo. Toàn bộ việc gán nhãn 4 ảnh gold, duyệt 24 ảnh batch trên CVAT và kiểm tra từng ảnh mẫu QC (`work/qc/review/*.jpg`) đều được thực hiện và kiểm chứng trực tiếp bằng mắt trên ảnh và đầu ra của các script `validate_labels.py`, `review_stats.py`, `qc_report.py`.
+- Gold có bị nhiễm không (bạn có nhìn pre-label hay hỏi AI trước khi gán xong)? Không — 4 ảnh gold (`img_001.jpg`, `img_012.jpg`, `img_020.jpg`, `img_036.jpg`) được gán tay hoàn toàn độc lập trên CVAT (Task `gold-manual`, 22 đối tượng trong 15 phút, trung bình 3.75 phút/ảnh) trước khi chạy bất kỳ model pre-label nào. Các ca khó / phân vân quy tắc đã gắn cờ `can_review` gồm: `img_012.jpg` (người `#8` ở rìa trên bị cắt một phần cơ thể), `img_020.jpg` (xe `#13` ở nền xa bị che khuất một phần phía sau người đi bộ) và `img_036.jpg` (cụm xe/người ở xa biên ~20 px gom vào `ignore_region`).
+- Máy / GPU / CVAT dùng; vướng mắc cài đặt: Máy Windows 11 chạy CPU (không có GPU rời), Python 3.14.10, CVAT Docker `v2.74.1` kèm Nuclio serverless (`YOLO v26s`, `YOLOE v26s-seg`, `SAM 2.1 Tiny`, `MobileSAM`). Vướng mắc đã xử lý: cài bổ sung `numpy`, `opencv-python-headless`, `matplotlib`, `pyyaml`, `torch`, `ultralytics`, `openai-clip` trên Python 3.14 và chuẩn hóa ký tự xuống dòng `\n` trong Nuclio local store.
+- Dùng cache `data/cache/` thay vì tự chạy? Không — đã tự chạy trực tiếp toàn bộ 6 lượt `prelabel.py` (`r01` đến `r06` trong `work/runs.csv`) và 4 lượt `sam2_points.py` trên CPU của máy.
+- Lỗi / bug script đã gặp (nếu có): Trên Python 3.14 với `setuptools >= 81`, gói `pkg_resources` bị gỡ bỏ khiến lệnh `from pkg_resources import packaging` trong thư viện `openai-clip` (khi chạy `YOLOE`) báo lỗi `ModuleNotFoundError: No module named 'pkg_resources'`. Đã sửa trong `scripts/prelabel.py` (dòng 121–126) bằng cách ánh xạ `sys.modules["pkg_resources"].packaging = packaging` trước khi nạp `YOLOE`.
+- Một điều bạn làm khác lần sau: Khi duyệt các ảnh đường phố đông đúc trên CVAT, sẽ luôn bấm phím `H` ẩn toàn bộ nhãn máy trong 10 giây đầu để quét bốn cạnh rìa ảnh và khoanh `ignore_region` trước, sau đó dùng `Filters` lọc riêng từng lớp (`bicycle`, `three_wheeler`) — cách này sẽ giúp bắt trọn các bẫy `missing` ở rìa ảnh (`img_004.jpg`) và `wrong_class` trong đám đông (`img_029.jpg`).
